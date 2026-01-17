@@ -1,0 +1,227 @@
+syntax = "proto3";
+
+package memory;
+
+// Memory Service - Manages short-term, long-term, and episodic memory
+service MemoryService {
+  // Short-term memory operations (Redis-backed)
+  rpc StoreShortTerm(ShortTermEntry) returns (StoreResponse);
+  rpc RetrieveShortTerm(RetrieveRequest) returns (ShortTermData);
+  rpc DeleteShortTerm(DeleteRequest) returns (DeleteResponse);
+
+  // Long-term memory operations (PostgreSQL)
+  rpc StoreLongTerm(LongTermEntry) returns (StoreResponse);
+  rpc RetrieveLongTerm(RetrieveRequest) returns (LongTermData);
+  rpc UpdatePreference(PreferenceUpdate) returns (StoreResponse);
+
+  // Episodic memory operations
+  rpc StoreEpisode(EpisodicEntry) returns (StoreResponse);
+  rpc RetrieveEpisodes(EpisodicQuery) returns (EpisodicResults);
+  rpc GenerateWeeklySummary(SummaryRequest) returns (SummaryResponse);
+
+  // Semantic search (Vector DB)
+  rpc SearchSemantic(SemanticQuery) returns (SemanticResults);
+  rpc StoreEmbedding(EmbeddingEntry) returns (StoreResponse);
+
+  // Learned behaviors
+  rpc RecordBehavior(BehaviorEntry) returns (StoreResponse);
+  rpc GetBehaviors(BehaviorQuery) returns (BehaviorResults);
+
+  // Context retrieval (aggregated memory for conversation)
+  rpc GetConversationContext(ContextRequest) returns (ContextResponse);
+
+  // User transparency controls
+  rpc ExportUserData(ExportRequest) returns (ExportResponse);
+  rpc DeleteUserData(DeleteUserRequest) returns (DeleteResponse);
+}
+
+// Short-term memory (session context)
+message ShortTermEntry {
+  string session_id = 1;
+  string user_id = 2;
+  string key = 3;
+  string value = 4;                  // JSON-encoded data
+  int32 ttl_seconds = 5;             // Time-to-live (default 86400 = 24 hours)
+}
+
+message ShortTermData {
+  map<string, string> data = 1;      // Key-value pairs
+  int64 expires_at = 2;              // Unix timestamp
+}
+
+// Long-term memory (preferences, settings)
+message LongTermEntry {
+  string user_id = 1;
+  string category = 2;               // 'voice', 'privacy', 'behavior', 'ui'
+  map<string, string> data = 3;      // Preference key-value pairs
+}
+
+message LongTermData {
+  string user_id = 1;
+  string category = 2;
+  map<string, string> data = 3;
+  int64 updated_at = 4;
+}
+
+message PreferenceUpdate {
+  string user_id = 1;
+  string category = 2;
+  string key = 3;
+  string value = 4;
+}
+
+// Episodic memory (event history)
+message EpisodicEntry {
+  string user_id = 1;
+  string event_type = 2;             // 'command', 'task', 'conversation', 'correction'
+  string summary = 3;
+  string details = 4;                // JSON-encoded details
+  int64 occurred_at = 5;             // Unix timestamp
+}
+
+message EpisodicQuery {
+  string user_id = 1;
+  string event_type = 2;             // Optional filter
+  int64 start_time = 3;              // Unix timestamp
+  int64 end_time = 4;                // Unix timestamp
+  int32 limit = 5;
+}
+
+message EpisodicResults {
+  repeated EpisodicEvent events = 1;
+}
+
+message EpisodicEvent {
+  int32 id = 1;
+  string event_type = 2;
+  string summary = 3;
+  string details = 4;
+  int64 occurred_at = 5;
+}
+
+// Weekly summaries
+message SummaryRequest {
+  string user_id = 1;
+  string week_start = 2;             // ISO date format (YYYY-MM-DD)
+}
+
+message SummaryResponse {
+  string summary = 1;
+  int32 event_count = 2;
+}
+
+// Semantic search (Vector DB)
+message SemanticQuery {
+  string user_id = 1;
+  string query = 2;
+  int32 top_k = 3;                   // Number of results to return
+  string content_type = 4;           // Optional filter: 'conversation', 'command', 'document'
+}
+
+message SemanticResults {
+  repeated SemanticMatch matches = 1;
+}
+
+message SemanticMatch {
+  int32 id = 1;
+  string content = 2;
+  float similarity = 3;              // Cosine similarity score
+  string content_type = 4;
+  string metadata = 5;               // JSON-encoded metadata
+}
+
+message EmbeddingEntry {
+  string user_id = 1;
+  string content_type = 2;
+  string content_text = 3;
+  repeated float embedding = 4;      // Vector embedding
+  string embedding_model = 5;        // Model used to generate embedding
+  string metadata = 6;               // JSON-encoded metadata
+}
+
+// Learned behaviors
+message BehaviorEntry {
+  string user_id = 1;
+  string behavior_type = 2;          // 'command_shortcut', 'tool_preference', 'speech_pattern'
+  string pattern = 3;
+  string metadata = 4;               // JSON-encoded metadata
+  float confidence = 5;
+}
+
+message BehaviorQuery {
+  string user_id = 1;
+  string behavior_type = 2;          // Optional filter
+  float min_confidence = 3;
+}
+
+message BehaviorResults {
+  repeated LearnedBehavior behaviors = 1;
+}
+
+message LearnedBehavior {
+  int32 id = 1;
+  string behavior_type = 2;
+  string pattern = 3;
+  string metadata = 4;
+  float confidence = 5;
+  int32 occurrence_count = 6;
+  int64 last_seen = 7;
+}
+
+// Conversation context (aggregated)
+message ContextRequest {
+  string user_id = 1;
+  string session_id = 2;
+  int32 max_history = 3;             // Max conversation turns to retrieve
+}
+
+message ContextResponse {
+  string session_id = 1;
+  map<string, string> short_term = 2;      // Current session data
+  map<string, string> preferences = 3;     // User preferences
+  repeated string recent_conversations = 4; // Recent conversation summaries
+  repeated LearnedBehavior behaviors = 5;  // Relevant learned behaviors
+}
+
+// User data export/deletion
+message ExportRequest {
+  string user_id = 1;
+  repeated string data_types = 2;    // ['preferences', 'behaviors', 'episodes', 'embeddings']
+}
+
+message ExportResponse {
+  string data = 1;                   // JSON-encoded user data
+  int64 exported_at = 2;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+  repeated string data_types = 2;    // What to delete (empty = all)
+  bool confirm = 3;                  // Must be true
+}
+
+// Generic responses
+message StoreResponse {
+  bool success = 1;
+  string message = 2;
+  int32 id = 3;                      // ID of stored item (if applicable)
+}
+
+message RetrieveRequest {
+  string user_id = 1;
+  string session_id = 2;             // Optional, for short-term memory
+  string key = 3;                    // Optional filter
+  string category = 4;               // Optional filter
+}
+
+message DeleteRequest {
+  string user_id = 1;
+  string session_id = 2;
+  string key = 3;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+  int32 deleted_count = 3;
+}

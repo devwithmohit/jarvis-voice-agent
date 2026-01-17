@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package voice;
+
+// Voice Gateway Service - Handles audio streaming, wake-word detection, and voice I/O
+service VoiceGateway {
+  // Stream audio from client and receive real-time transcription chunks
+  rpc StreamAudio(stream AudioChunk) returns (stream TranscriptChunk);
+
+  // Detect wake-word from audio stream (always-listening mode)
+  rpc DetectWakeWord(stream AudioChunk) returns (WakeWordDetected);
+
+  // Stream TTS audio back to client
+  rpc StreamTTS(TTSRequest) returns (stream AudioChunk);
+
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Audio chunk for streaming
+message AudioChunk {
+  bytes data = 1;                    // Raw PCM audio data
+  int32 sample_rate = 2;             // Samples per second (e.g., 16000, 44100)
+  int32 channels = 3;                // Number of audio channels (1=mono, 2=stereo)
+  int32 bit_depth = 4;               // Bits per sample (16, 24, 32)
+  int64 timestamp = 5;               // Unix timestamp in milliseconds
+  string session_id = 6;             // Session identifier
+}
+
+// Transcript chunk from STT processing
+message TranscriptChunk {
+  string text = 1;                   // Transcribed text
+  bool is_final = 2;                 // Whether this is a final transcription
+  float confidence = 3;              // Confidence score 0.0-1.0
+  int64 start_time = 4;              // Start time in milliseconds
+  int64 end_time = 5;                // End time in milliseconds
+  string language = 6;               // Detected language code (e.g., "en-US")
+}
+
+// Wake-word detection result
+message WakeWordDetected {
+  bool detected = 1;                 // Whether wake-word was detected
+  float confidence = 2;              // Detection confidence 0.0-1.0
+  string wake_word = 3;              // Which wake-word was detected
+  int64 timestamp = 4;               // When detection occurred
+}
+
+// TTS request
+message TTSRequest {
+  string text = 1;                   // Text to synthesize
+  string voice_id = 2;               // Voice profile identifier
+  float speed = 3;                   // Speech rate multiplier (1.0 = normal)
+  float pitch = 4;                   // Pitch adjustment (-1.0 to 1.0)
+  string session_id = 5;             // Session identifier
+}
+
+// Health check
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string version = 2;
+  int64 uptime_seconds = 3;
+}

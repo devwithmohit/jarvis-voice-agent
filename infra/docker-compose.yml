@@ -1,0 +1,167 @@
+version: "3.9"
+
+services:
+  # PostgreSQL - Primary data store for long-term memory and user data
+  postgres:
+    image: postgres:15-alpine
+    container_name: voice-agent-postgres
+    environment:
+      POSTGRES_DB: voice_agent
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d voice_agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - voice-agent-net
+
+  # Redis - Short-term memory cache and pub/sub messaging
+  redis:
+    image: redis:7-alpine
+    container_name: voice-agent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - voice-agent-net
+
+  # API Gateway - Main HTTP/WebSocket entry point (Python FastAPI)
+  # Uncomment when service is implemented in Phase 2+
+  # api-gateway:
+  #   build:
+  #     context: ../services/api-gateway
+  #     dockerfile: ../../infra/docker/api-gateway.Dockerfile
+  #   container_name: voice-agent-api-gateway
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DB_HOST=postgres
+  #     - REDIS_HOST=redis
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - voice-agent-net
+
+  # Memory Service - Memory management (Python)
+  # Uncomment when service is implemented in Phase 2
+  # memory-service:
+  #   build:
+  #     context: ../services/memory-service
+  #     dockerfile: ../../infra/docker/memory-service.Dockerfile
+  #   container_name: voice-agent-memory
+  #   environment:
+  #     - DB_HOST=postgres
+  #     - REDIS_HOST=redis
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - voice-agent-net
+
+  # Agent Core - Reasoning engine (Python)
+  # Uncomment when service is implemented
+  # agent-core:
+  #   build:
+  #     context: ../services/agent-core
+  #     dockerfile: ../../infra/docker/agent-core.Dockerfile
+  #   container_name: voice-agent-core
+  #   environment:
+  #     - REDIS_HOST=redis
+  #     - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+  #   depends_on:
+  #     - memory-service
+  #   networks:
+  #     - voice-agent-net
+
+  # STT Service - Speech-to-Text (Python + Whisper)
+  # Uncomment when service is implemented
+  # stt-service:
+  #   build:
+  #     context: ../services/stt-service
+  #     dockerfile: ../../infra/docker/stt-service.Dockerfile
+  #   container_name: voice-agent-stt
+  #   volumes:
+  #     - ./models:/models  # Mount for Whisper model cache
+  #   networks:
+  #     - voice-agent-net
+
+  # TTS Service - Text-to-Speech (Python + Coqui TTS)
+  # Uncomment when service is implemented
+  # tts-service:
+  #   build:
+  #     context: ../services/tts-service
+  #     dockerfile: ../../infra/docker/tts-service.Dockerfile
+  #   container_name: voice-agent-tts
+  #   volumes:
+  #     - ./models:/models  # Mount for TTS model cache
+  #   networks:
+  #     - voice-agent-net
+
+  # Voice Gateway - Audio streaming & wake-word (Rust)
+  # Uncomment when service is implemented
+  # voice-gateway:
+  #   build:
+  #     context: ../services/voice-gateway
+  #     dockerfile: ../../infra/docker/voice-gateway.Dockerfile
+  #   container_name: voice-agent-voice-gateway
+  #   ports:
+  #     - "9000:9000"  # WebSocket for audio streaming
+  #   networks:
+  #     - voice-agent-net
+
+  # Tool Executor - Sandboxed tool execution (Rust)
+  # Uncomment when service is implemented
+  # tool-executor:
+  #   build:
+  #     context: ../services/tool-executor
+  #     dockerfile: ../../infra/docker/tool-executor.Dockerfile
+  #   container_name: voice-agent-tool-executor
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   cap_drop:
+  #     - ALL
+  #   cap_add:
+  #     - NET_BIND_SERVICE
+  #   networks:
+  #     - voice-agent-net
+
+  # Web Service - Browser automation (Python + Playwright)
+  # Uncomment when service is implemented
+  # web-service:
+  #   build:
+  #     context: ../services/web-service
+  #     dockerfile: ../../infra/docker/web-service.Dockerfile
+  #   container_name: voice-agent-web
+  #   environment:
+  #     - SERPAPI_KEY=${SERPAPI_KEY}
+  #   networks:
+  #     - voice-agent-net
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  voice-agent-net:
+    driver: bridge

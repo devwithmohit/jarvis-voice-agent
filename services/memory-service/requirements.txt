@@ -1,0 +1,9 @@
+grpcio==1.60.0
+grpcio-tools==1.60.0
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+redis==5.0.1
+faiss-cpu==1.7.4
+sentence-transformers==2.3.1
+numpy==1.26.3
+pydantic==2.5.3

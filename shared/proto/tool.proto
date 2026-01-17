@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+package tool;
+
+// Tool Executor Service - Sandboxed tool execution with security controls
+service ToolExecutor {
+  // Execute a single tool with security checks
+  rpc ExecuteTool(ToolRequest) returns (ToolResponse);
+
+  // Execute multiple tools in sequence or parallel
+  rpc ExecuteBatch(BatchRequest) returns (stream ToolResponse);
+
+  // Check if user has permission to execute a tool
+  rpc CheckPermission(PermissionRequest) returns (PermissionResponse);
+
+  // Get available tools for a user
+  rpc ListAvailableTools(ListToolsRequest) returns (ToolList);
+
+  // Cancel a running tool execution
+  rpc CancelExecution(CancelRequest) returns (CancelResponse);
+}
+
+// Web Service - Browser automation and web search
+service WebService {
+  // Perform web search
+  rpc Search(SearchRequest) returns (SearchResponse);
+
+  // Navigate to URL and extract content
+  rpc NavigateAndExtract(NavigationRequest) returns (ContentResponse);
+
+  // Automate browser actions (YouTube, etc.)
+  rpc AutomateBrowser(BrowserAutomationRequest) returns (AutomationResponse);
+
+  // Take screenshot
+  rpc Screenshot(ScreenshotRequest) returns (ScreenshotResponse);
+}
+
+// Tool execution request
+message ToolRequest {
+  string user_id = 1;
+  string session_id = 2;
+  string tool_name = 3;              // e.g., "file_read", "web_search", "execute_command"
+  map<string, string> parameters = 4;  // Tool-specific parameters
+  int32 timeout_seconds = 5;         // Execution timeout
+  bool dry_run = 6;                  // Simulate without executing
+  string request_id = 7;             // Unique request identifier
+}
+
+message ToolResponse {
+  string request_id = 1;
+  bool success = 2;
+  string result = 3;                 // Result data (JSON-encoded)
+  string error_message = 4;
+  int32 execution_time_ms = 5;
+  string status = 6;                 // 'completed', 'failed', 'timeout', 'denied'
+  map<string, string> metadata = 7;
+}
+
+// Batch execution
+message BatchRequest {
+  string user_id = 1;
+  string session_id = 2;
+  repeated ToolRequest tools = 3;
+  bool execute_parallel = 4;         // true = parallel, false = sequential
+  bool stop_on_error = 5;            // Whether to stop batch if one fails
+}
+
+// Permission checking
+message PermissionRequest {
+  string user_id = 1;
+  string tool_name = 2;
+  string action = 3;                 // 'read', 'write', 'execute'
+}
+
+message PermissionResponse {
+  bool allowed = 1;
+  string permission_level = 2;       // 'read', 'write', 'execute', 'admin'
+  string reason = 3;                 // Explanation if denied
+  bool rate_limited = 4;             // Whether rate limit was hit
+}
+
+// Tool listing
+message ListToolsRequest {
+  string user_id = 1;
+  string category = 2;               // Optional: 'file', 'web', 'system', 'media'
+}
+
+message ToolList {
+  repeated ToolDefinition tools = 1;
+}
+
+message ToolDefinition {
+  string name = 1;
+  string description = 2;
+  string category = 3;
+  repeated ParameterDefinition parameters = 4;
+  bool requires_confirmation = 5;
+  int32 rate_limit_per_hour = 6;
+}
+
+message ParameterDefinition {
+  string name = 1;
+  string type = 2;                   // 'string', 'int', 'bool', 'file_path'
+  string description = 3;
+  bool required = 4;
+  string default_value = 5;
+}
+
+// Cancellation
+message CancelRequest {
+  string request_id = 1;
+  string user_id = 2;
+}
+
+message CancelResponse {
+  bool cancelled = 1;
+  string message = 2;
+}
+
+// ============================================================================
+// WEB SERVICE MESSAGES
+// ============================================================================
+
+// Web search
+message SearchRequest {
+  string query = 1;
+  int32 max_results = 2;
+  string search_type = 3;            // 'general', 'news', 'images', 'videos'
+  string user_id = 4;
+  string session_id = 5;
+}
+
+message SearchResponse {
+  repeated SearchResult results = 1;
+  int32 total_results = 2;
+  string search_engine = 3;          // Which engine was used
+}
+
+message SearchResult {
+  string title = 1;
+  string url = 2;
+  string snippet = 3;
+  string published_date = 4;
+  float relevance_score = 5;
+}
+
+// Browser navigation
+message NavigationRequest {
+  string url = 1;
+  string action = 2;                 // 'extract_text', 'extract_links', 'full_html'
+  bool wait_for_load = 3;
+  int32 timeout_seconds = 4;
+  string user_id = 5;
+  string session_id = 6;
+}
+
+message ContentResponse {
+  string content = 1;                // Extracted content
+  string page_title = 2;
+  string final_url = 3;              // After redirects
+  repeated string links = 4;         // Extracted links
+  int32 load_time_ms = 5;
+}
+
+// Browser automation
+message BrowserAutomationRequest {
+  string site = 1;                   // 'youtube', 'google', 'generic'
+  string action = 2;                 // 'play_video', 'search', 'click', 'type'
+  map<string, string> parameters = 3;  // Action-specific params
+  string user_id = 4;
+  string session_id = 5;
+}
+
+message AutomationResponse {
+  bool success = 1;
+  string result = 2;
+  string screenshot_base64 = 3;      // Optional screenshot
+  repeated string logs = 4;          // Action logs
+}
+
+// Screenshot
+message ScreenshotRequest {
+  string url = 1;
+  string selector = 2;               // Optional: CSS selector for element
+  int32 width = 3;
+  int32 height = 4;
+  string user_id = 5;
+}
+
+message ScreenshotResponse {
+  bytes image_data = 1;              // PNG image data
+  string format = 2;                 // 'png', 'jpeg'
+  int32 width = 3;
+  int32 height = 4;
+}

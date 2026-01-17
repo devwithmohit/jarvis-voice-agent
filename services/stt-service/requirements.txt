@@ -1,0 +1,7 @@
+grpcio==1.60.0
+grpcio-tools==1.60.0
+openai-whisper==20231117
+faster-whisper==0.10.0
+numpy==1.26.3
+torch==2.1.2
+soundfile==0.12.1

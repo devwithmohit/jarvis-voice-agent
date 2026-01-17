@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package agent;
+
+// Agent Core Service - Reasoning engine and orchestration
+service AgentCore {
+  // Process user input and generate response with proposed actions
+  rpc ProcessIntent(UserInput) returns (AgentResponse);
+
+  // Execute a task with real-time updates
+  rpc ExecuteTask(TaskRequest) returns (stream TaskUpdate);
+
+  // Multi-turn conversation management
+  rpc ContinueConversation(ConversationTurn) returns (AgentResponse);
+
+  // Handle user corrections and feedback
+  rpc ProcessFeedback(UserFeedback) returns (FeedbackResponse);
+
+  // Confirm or reject proposed actions
+  rpc ConfirmAction(ActionConfirmation) returns (ConfirmationResponse);
+}
+
+// User input message
+message UserInput {
+  string user_id = 1;
+  string session_id = 2;
+  string text = 3;                   // User's spoken/typed input
+  map<string, string> context = 4;   // Additional context (location, time, etc.)
+  string language = 5;               // Language code (e.g., "en-US")
+}
+
+// Agent response with proposed actions
+message AgentResponse {
+  string response_text = 1;          // Natural language response
+  repeated ToolAction proposed_actions = 2;  // Tools to execute
+  bool requires_confirmation = 3;    // Whether user confirmation is needed
+  string confirmation_prompt = 4;    // Prompt to show user
+  string session_id = 5;
+  map<string, string> context_updates = 6;  // Updates to session context
+  float confidence = 7;              // Response confidence 0.0-1.0
+}
+
+// Tool action proposal
+message ToolAction {
+  string action_id = 1;              // Unique ID for this action
+  string tool_name = 2;              // Tool to invoke (e.g., "web_search", "file_read")
+  map<string, string> parameters = 3;  // Tool-specific parameters
+  string confirmation_prompt = 4;    // Prompt if confirmation required
+  int32 priority = 5;                // Execution priority (0=highest)
+  bool requires_confirmation = 6;    // Whether this specific action needs confirmation
+  int32 estimated_duration_ms = 7;  // Expected execution time
+}
+
+// Task execution request
+message TaskRequest {
+  string user_id = 1;
+  string session_id = 2;
+  string task_description = 3;       // High-level task description
+  repeated ToolAction actions = 4;   // Pre-approved actions to execute
+  bool stream_updates = 5;           // Whether to stream progress
+}
+
+// Task execution updates (streamed)
+message TaskUpdate {
+  string task_id = 1;
+  string status = 2;                 // 'running', 'completed', 'failed', 'waiting_confirmation'
+  string message = 3;                // Status message
+  int32 progress_percentage = 4;     // 0-100
+  string current_action = 5;         // Current tool being executed
+  string result = 6;                 // Result data (JSON-encoded)
+  int64 timestamp = 7;
+}
+
+// Conversation turn
+message ConversationTurn {
+  string user_id = 1;
+  string session_id = 2;
+  string message = 3;
+  int32 turn_number = 4;             // Conversation turn counter
+  string previous_response_id = 5;   // Reference to previous response
+}
+
+// User feedback (corrections, ratings)
+message UserFeedback {
+  string user_id = 1;
+  string session_id = 2;
+  string response_id = 3;            // ID of response being rated
+  string feedback_type = 4;          // 'correction', 'rating', 'preference'
+  string feedback_text = 5;          // Natural language feedback
+  int32 rating = 6;                  // 1-5 rating (optional)
+  map<string, string> metadata = 7;
+}
+
+message FeedbackResponse {
+  bool acknowledged = 1;
+  string message = 2;
+  bool behavior_updated = 3;         // Whether learned behavior was updated
+}
+
+// Action confirmation
+message ActionConfirmation {
+  string user_id = 1;
+  string session_id = 2;
+  string action_id = 3;
+  bool confirmed = 4;                // true = proceed, false = cancel
+  string modification = 5;           // Optional: modified parameters (JSON)
+}
+
+message ConfirmationResponse {
+  bool accepted = 1;
+  string message = 2;
+  TaskUpdate execution_result = 3;   // Immediate execution result if confirmed
+}

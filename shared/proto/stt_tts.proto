@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+package speech;
+
+// Speech-to-Text Service (Whisper integration)
+service STTService {
+  // Transcribe audio stream in real-time
+  rpc TranscribeStream(stream AudioChunk) returns (stream TranscriptionResult);
+
+  // Transcribe complete audio file
+  rpc TranscribeFile(AudioFile) returns (TranscriptionResult);
+
+  // Get supported languages
+  rpc GetSupportedLanguages(LanguageRequest) returns (LanguageList);
+
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Text-to-Speech Service (Coqui TTS / ElevenLabs)
+service TTSService {
+  // Synthesize text to speech
+  rpc Synthesize(SynthesisRequest) returns (stream AudioChunk);
+
+  // Get available voices
+  rpc ListVoices(VoiceListRequest) returns (VoiceList);
+
+  // Clone voice from samples (if supported)
+  rpc CloneVoice(VoiceCloneRequest) returns (VoiceCloneResponse);
+
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// ============================================================================
+// STT MESSAGES
+// ============================================================================
+
+message AudioChunk {
+  bytes data = 1;                    // Raw PCM audio data
+  int32 sample_rate = 2;             // e.g., 16000, 44100
+  int32 channels = 3;                // 1=mono, 2=stereo
+  int32 bit_depth = 4;               // 16, 24, 32
+  int64 timestamp = 5;
+  string session_id = 6;
+}
+
+message AudioFile {
+  bytes data = 1;                    // Complete audio file
+  string format = 2;                 // 'wav', 'mp3', 'flac', 'ogg'
+  string language = 3;               // Optional: hint for better accuracy
+  string user_id = 4;
+  string session_id = 5;
+}
+
+message TranscriptionResult {
+  string text = 1;                   // Transcribed text
+  bool is_final = 2;                 // Whether this is final result
+  float confidence = 3;              // 0.0-1.0
+  string language = 4;               // Detected language
+  repeated WordTiming word_timings = 5;  // Word-level timestamps
+  int64 start_time = 6;              // Start timestamp
+  int64 end_time = 7;                // End timestamp
+  repeated Alternative alternatives = 8;  // Alternative transcriptions
+}
+
+message WordTiming {
+  string word = 1;
+  int64 start_time = 2;              // Milliseconds
+  int64 end_time = 3;
+  float confidence = 4;
+}
+
+message Alternative {
+  string text = 1;
+  float confidence = 2;
+}
+
+message LanguageRequest {}
+
+message LanguageList {
+  repeated Language languages = 1;
+}
+
+message Language {
+  string code = 1;                   // e.g., "en-US", "es-ES"
+  string name = 2;                   // e.g., "English (US)", "Spanish (Spain)"
+  bool supported = 3;
+}
+
+// ============================================================================
+// TTS MESSAGES
+// ============================================================================
+
+message SynthesisRequest {
+  string text = 1;                   // Text to synthesize
+  string voice_id = 2;               // Voice identifier
+  string language = 3;               // Language code
+  float speed = 4;                   // Speech rate (0.5-2.0, default 1.0)
+  float pitch = 5;                   // Pitch adjustment (-1.0 to 1.0, default 0)
+  float volume = 6;                  // Volume (0.0-1.0, default 1.0)
+  string output_format = 7;          // 'pcm', 'mp3', 'wav'
+  int32 sample_rate = 8;             // Desired sample rate
+  string user_id = 9;
+  string session_id = 10;
+}
+
+message VoiceListRequest {
+  string language = 1;               // Optional filter by language
+  string gender = 2;                 // Optional filter: 'male', 'female', 'neutral'
+}
+
+message VoiceList {
+  repeated Voice voices = 1;
+}
+
+message Voice {
+  string id = 1;                     // Unique voice identifier
+  string name = 2;                   // Display name
+  string language = 3;               // Primary language
+  string gender = 4;                 // 'male', 'female', 'neutral'
+  string description = 5;            // Voice description
+  repeated string styles = 6;        // Available styles: 'casual', 'professional', 'narrative'
+  bool is_custom = 7;                // Whether this is a user-cloned voice
+}
+
+message VoiceCloneRequest {
+  string user_id = 1;
+  string voice_name = 2;             // Name for the cloned voice
+  repeated bytes audio_samples = 3;  // Sample audio files (WAV format)
+  string description = 4;
+}
+
+message VoiceCloneResponse {
+  bool success = 1;
+  string voice_id = 2;               // ID of newly cloned voice
+  string message = 3;
+  float quality_score = 4;           // Estimated voice quality 0.0-1.0
+}
+
+// ============================================================================
+// COMMON MESSAGES
+// ============================================================================
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string version = 2;
+  int64 uptime_seconds = 3;
+  map<string, string> stats = 4;    // Service-specific statistics
+}

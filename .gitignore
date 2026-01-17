@@ -1,0 +1,130 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+
+# Docker
+docker-compose.override.yml
+
+# AI Models (large files)
+models/
+*.pt
+*.pth
+*.onnx
+*.bin
+*.safetensors
+
+# Generated gRPC code (tracked but can be regenerated)
+# Uncomment if you want to ignore generated files
+# shared/models/generated/*_pb2.py
+# shared/models/generated/*_pb2_grpc.py
+# shared/models/generated/*.pyi
+
+# Audio files
+*.wav
+*.mp3
+*.flac
+*.ogg
+audio_samples/
+recordings/
+
+# Vector indices
+*.faiss
+*.index
+vector_store/
+
+# Temp files
+tmp/
+temp/
+*.tmp
+.cache/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Test coverage
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Secrets (never commit)
+secrets/
+*.key
+*.pem
+*.crt
+credentials.json
+
+# Build artifacts
+*.whl
+*.tar.gz
