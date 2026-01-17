@@ -1,0 +1,63 @@
+# Intent Classification Rules
+# Rule-based patterns for fast intent classification
+
+intents:
+  search:
+    patterns:
+      - "(search|find|look up|google|what is|who is|where is|when is|how to)"
+      - "(show me|tell me about|information about)"
+      - "(latest|recent|current) (news|info|information)"
+    confidence: 0.85
+    entities:
+      - query
+
+  browse:
+    patterns:
+      - "(open|go to|navigate to|visit) (https?://|www\\.)"
+      - "(play|watch) .* (youtube|video)"
+      - "(open|launch) .* (browser|website)"
+    confidence: 0.85
+    entities:
+      - url
+
+  remember:
+    patterns:
+      - "(remember|save|store|note|record) (this|that)"
+      - "(make a note|take note|write down)"
+      - "(add to|save to) (memory|notes)"
+    confidence: 0.80
+    entities:
+      - content
+
+  execute:
+    patterns:
+      - "(run|execute|perform|do)"
+      - "(create|make|build|generate) (file|document)"
+      - "(write|save) .* (to file|to disk)"
+    confidence: 0.75
+    entities:
+      - action
+      - target
+
+  clarification:
+    patterns:
+      - "^(what|which|can you clarify|I don't understand)"
+      - "(huh|what do you mean|explain)"
+      - "^(sorry|pardon|repeat)"
+    confidence: 0.80
+
+  conversation:
+    patterns:
+      - "^(hello|hi|hey|greetings)"
+      - "^(thank you|thanks|appreciate)"
+      - "^(yes|no|okay|sure|fine)"
+      - "(how are you|what's up)"
+    confidence: 0.90
+
+# Ambiguity indicators - trigger LLM classification
+ambiguity_indicators:
+  - "multiple actions mentioned"
+  - "conditional logic present"
+  - "unclear target or subject"
+  - "complex query structure"
+  - "low pattern match confidence"

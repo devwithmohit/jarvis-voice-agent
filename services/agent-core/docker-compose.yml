@@ -1,0 +1,61 @@
+# Docker Compose for Agent Core Service
+version: "3.8"
+
+services:
+  agent-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-core
+    ports:
+      - "50052:50052" # gRPC
+      - "8002:8002" # REST API
+    environment:
+      # LLM Configuration
+      - LLM_API_KEY=${OPENROUTER_API_KEY}
+      - LLM_BASE_URL=https://openrouter.ai/api/v1
+      - LLM_MODEL=meta-llama/llama-3.1-8b-instruct
+      - LLM_TEMPERATURE=0.3
+      - LLM_MAX_TOKENS=2000
+
+      # Redis Configuration (for rate limiting)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+
+      # Service Endpoints
+      - MEMORY_SERVICE_HOST=memory-service
+      - MEMORY_SERVICE_PORT=50051
+      - TOOL_EXECUTOR_HOST=tool-executor
+      - TOOL_EXECUTOR_PORT=50055
+      - WEB_SERVICE_HOST=web-service
+      - WEB_SERVICE_PORT=50056
+
+      # Ports
+      - GRPC_PORT=50052
+      - REST_PORT=8002
+    depends_on:
+      - redis
+    volumes:
+      - ./config:/app/config:ro
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: agent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+
+networks:
+  agent-network:
+    driver: bridge

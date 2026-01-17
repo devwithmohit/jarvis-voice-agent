@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package agent;
+
+// Agent Core Service - Main reasoning engine
+service AgentService {
+    // Process user request end-to-end
+    rpc ProcessRequest(ProcessRequestRequest) returns (ProcessRequestResponse);
+
+    // Classify user intent
+    rpc ClassifyIntent(ClassifyIntentRequest) returns (ClassifyIntentResponse);
+
+    // Create execution plan
+    rpc CreatePlan(CreatePlanRequest) returns (CreatePlanResponse);
+
+    // Validate tool action
+    rpc ValidateAction(ValidateActionRequest) returns (ValidateActionResponse);
+
+    // Confirm pending action
+    rpc ConfirmAction(ConfirmActionRequest) returns (ConfirmActionResponse);
+
+    // Get conversation context
+    rpc GetConversation(GetConversationRequest) returns (GetConversationResponse);
+}
+
+// Process Request Messages
+message ProcessRequestRequest {
+    string session_id = 1;
+    string user_id = 2;
+    string user_input = 3;
+    map<string, string> metadata = 4;
+}
+
+message ProcessRequestResponse {
+    bool success = 1;
+    string response = 2;
+    string error = 3;
+    Plan plan = 4;
+    repeated ActionResult action_results = 5;
+    bool needs_confirmation = 6;
+}
+
+// Intent Classification Messages
+message ClassifyIntentRequest {
+    string user_input = 1;
+    map<string, string> context = 2;
+}
+
+message ClassifyIntentResponse {
+    string intent_type = 1;
+    double confidence = 2;
+    map<string, string> entities = 3;
+    string reasoning = 4;
+    bool required_llm_fallback = 5;
+}
+
+// Plan Creation Messages
+message CreatePlanRequest {
+    string user_input = 1;
+    string intent_type = 2;
+    map<string, string> context = 3;
+}
+
+message CreatePlanResponse {
+    bool success = 1;
+    Plan plan = 2;
+    string error = 3;
+}
+
+message Plan {
+    repeated Action actions = 1;
+    string thought_process = 2;
+    string expected_outcome = 3;
+    double confidence = 4;
+    bool needs_confirmation = 5;
+}
+
+message Action {
+    string tool_name = 1;
+    map<string, string> parameters = 2;
+    string reasoning = 3;
+    string confirmation_level = 4;
+}
+
+// Action Validation Messages
+message ValidateActionRequest {
+    string user_id = 1;
+    Action action = 2;
+}
+
+message ValidateActionResponse {
+    bool is_valid = 1;
+    string error_message = 2;
+}
+
+// Action Confirmation Messages
+message ConfirmActionRequest {
+    string session_id = 1;
+    string user_id = 2;
+    bool confirmed = 3;
+}
+
+message ConfirmActionResponse {
+    bool success = 1;
+    string response = 2;
+    repeated ActionResult action_results = 3;
+}
+
+message ActionResult {
+    string tool_name = 1;
+    bool success = 2;
+    string result = 3;
+    string error = 4;
+}
+
+// Conversation Messages
+message GetConversationRequest {
+    string session_id = 1;
+}
+
+message GetConversationResponse {
+    string session_id = 1;
+    string user_id = 2;
+    repeated Message messages = 3;
+    map<string, string> user_preferences = 4;
+    string current_task = 5;
+}
+
+message Message {
+    string role = 1;
+    string content = 2;
+    string timestamp = 3;
+    map<string, string> metadata = 4;
+}

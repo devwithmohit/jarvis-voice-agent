@@ -1,53 +1,75 @@
-# Agent Core Service
+# Agent Core - Voice AI Agent Reasoning Engine
 
 **Language**: Python 3.11+
-**Framework**: gRPC (asyncio)
-**Purpose**: AI reasoning engine and orchestration hub
+**Frameworks**: FastAPI + gRPC
+**Purpose**: Central reasoning and orchestration service
 
-## Responsibilities
+## 🎯 Overview
 
-- **Intent Classification**: Hybrid rule-based + LLM classification
-- **Conversation Management**: Multi-turn context tracking
-- **Reasoning Pipeline**: Plan → Propose → Verify → Respond
-- **Tool Router**: Validate tools, enforce permissions, request confirmations
-- **Response Synthesis**: Generate natural language responses
+Agent Core is the brain of the Voice AI Agent system, providing:
 
-## gRPC Service
+- **Hybrid Intent Classification**: Fast rule-based matching with LLM fallback
+- **LLM-Based Planning**: Generates tool execution sequences using meta-llama/llama-3.1-8b-instruct
+- **Security-First Design**: Confirmation levels, rate limiting, allowlists/blocklists
+- **Multi-Turn Conversations**: Session management with context tracking
+- **Tool Orchestration**: Routes actions to appropriate services (web-service, tool-executor)
 
-Implements `AgentCore` from `shared/proto/agent.proto`:
-
-- `ProcessIntent` - Main entry point for user input
-- `ExecuteTask` - Execute approved actions with streaming updates
-- `ContinueConversation` - Multi-turn conversation handling
-- `ProcessFeedback` - Handle user corrections and ratings
-- `ConfirmAction` - User confirmation for sensitive actions
-
-## Architecture
+## 🏗️ Architecture
 
 ```
-User Input → Intent Detection → Context Retrieval (Memory Service)
-                ↓
-      Reasoning Engine (LLM: LLaMA 3 / OpenRouter)
-                ↓
-      Tool Selection & Validation → Confirmation Check
-                ↓
-      Tool Execution (via Tool Executor) → Response Synthesis
+User Request
+    ↓
+[Intent Classifier] ──→ Rule-based patterns (fast, 85-90% confidence)
+    ↓                    ↓ (if ambiguous < 70%)
+    └──────────────→ LLM fallback
+    ↓
+[Planner] ──────────→ LLM generates 1-5 action plan
+    ↓
+[Tool Router] ──────→ Validates security & parameters
+    ↓
+[Confirmation?] ────→ Soft/Hard actions require approval
+    ↓
+[Execution] ────────→ Routes to web-service or tool-executor
+    ↓
+[Response Synthesizer] → Natural language response
+    ↓
+User Response
 ```
 
-## LLM Integration
+## 📋 Core Features
 
-**Primary**: Self-hosted LLaMA 3 8B via vLLM
-**Fallback**: OpenRouter API (meta-llama/llama-3.1-8b-instruct)
+### Intent Classification (6 Types)
 
-**Prompt Structure**:
+- **SEARCH**: Web searches, information lookup
+- **BROWSE**: Website navigation, browser control
+- **EXECUTE**: File operations, system commands
+- **REMEMBER**: Memory storage, note-taking
+- **CONVERSATION**: Greetings, small talk
+- **CLARIFICATION**: Ambiguous requests
 
-```
-System: You are a helpful AI assistant with access to tools...
-Context: {user_preferences, recent_conversation, learned_behaviors}
-User: {user_input}
-Available Tools: {tool_list_with_descriptions}
-Response Format: {structured_json_with_tool_calls}
-```
+### Planning & Execution
+
+- **LLM-Powered**: Uses OpenRouter API with LLaMA 3.1-8b-instruct
+- **Safety Limits**: Maximum 5 actions per plan
+- **Reasoning**: Each action includes human-readable explanation
+- **Confidence Scoring**: Based on intent + plan complexity
+
+### Security (Three-Tier Confirmation)
+
+1. **none**: Safe read-only operations (web_search, file_read)
+2. **soft**: Reversible actions (browser_click, browser_type)
+3. **hard**: Destructive operations (file_write, system_command)
+
+### Rate Limiting
+
+- **Per-user, per-tool** using Redis token bucket
+- web_search: 20/min, web_fetch: 15/min, file_write: 5/min, system_command: 3/min
+
+### Tool Support (9 Tools)
+
+- **Web**: web_search, web_fetch, browser_navigate, browser_click, browser_type
+- **Files**: file_read, file_list, file_write
+- **System**: system_command (disabled by default)
 
 ## Intent Classification
 

@@ -1,0 +1,181 @@
+# Tool Definitions Configuration
+# Defines available tools, their parameters, and security policies
+
+tools:
+  web_search:
+    name: "Web Search"
+    description: "Search the internet for current information using a search engine"
+    confirmation: none
+    rate_limit: 20  # requests per minute
+    enabled: true
+    parameters:
+      - name: query
+        type: string
+        required: true
+        description: "Search query string"
+      - name: max_results
+        type: integer
+        required: false
+        default: 5
+        description: "Maximum number of results to return"
+        min: 1
+        max: 10
+
+  web_fetch:
+    name: "Web Fetch"
+    description: "Fetch and extract content from a specific URL"
+    confirmation: none
+    rate_limit: 15
+    enabled: true
+    parameters:
+      - name: url
+        type: string
+        required: true
+        description: "URL to fetch content from"
+        pattern: "^https?://"
+      - name: extract_type
+        type: string
+        required: false
+        default: "text"
+        description: "Type of content to extract (text, markdown, html)"
+        enum: ["text", "markdown", "html"]
+
+  browser_navigate:
+    name: "Browser Navigation"
+    description: "Navigate to a URL in a headless browser"
+    confirmation: none
+    rate_limit: 10
+    enabled: true
+    parameters:
+      - name: url
+        type: string
+        required: true
+        description: "URL to navigate to"
+        pattern: "^https?://"
+
+  browser_click:
+    name: "Browser Click"
+    description: "Click an element on the current browser page"
+    confirmation: soft
+    rate_limit: 10
+    enabled: true
+    parameters:
+      - name: selector
+        type: string
+        required: true
+        description: "CSS selector or XPath for the element"
+      - name: wait_after_click
+        type: integer
+        required: false
+        default: 1000
+        description: "Milliseconds to wait after clicking"
+
+  browser_type:
+    name: "Browser Type"
+    description: "Type text into an input field on the current page"
+    confirmation: soft
+    rate_limit: 10
+    enabled: true
+    parameters:
+      - name: selector
+        type: string
+        required: true
+        description: "CSS selector for the input field"
+      - name: text
+        type: string
+        required: true
+        description: "Text to type"
+
+  file_read:
+    name: "File Read"
+    description: "Read contents of a file from the filesystem"
+    confirmation: none
+    rate_limit: 10
+    enabled: true
+    parameters:
+      - name: path
+        type: string
+        required: true
+        description: "Path to the file to read"
+    allowlist:
+      - "~/Documents/*"
+      - "~/Downloads/*"
+      - "./workspace/*"
+
+  file_list:
+    name: "File List"
+    description: "List files in a directory"
+    confirmation: none
+    rate_limit: 10
+    enabled: true
+    parameters:
+      - name: path
+        type: string
+        required: true
+        description: "Directory path to list"
+      - name: pattern
+        type: string
+        required: false
+        description: "File pattern to match (e.g., *.txt)"
+    allowlist:
+      - "~/Documents/*"
+      - "~/Downloads/*"
+      - "./workspace/*"
+
+  file_write:
+    name: "File Write"
+    description: "Write content to a file on the filesystem"
+    confirmation: hard  # Always require explicit confirmation
+    rate_limit: 5
+    enabled: true
+    parameters:
+      - name: path
+        type: string
+        required: true
+        description: "Path to write the file"
+      - name: content
+        type: string
+        required: true
+        description: "Content to write to file"
+      - name: overwrite
+        type: boolean
+        required: false
+        default: false
+        description: "Whether to overwrite if file exists"
+    blocklist:
+      - "/etc/*"
+      - "/sys/*"
+      - "/proc/*"
+      - "C:\\Windows\\*"
+      - "C:\\Program Files\\*"
+    allowlist:
+      - "~/Documents/*"
+      - "~/Downloads/*"
+      - "./workspace/*"
+
+  system_command:
+    name: "System Command"
+    description: "Execute a command on the operating system"
+    confirmation: hard  # Always require explicit confirmation
+    rate_limit: 3
+    enabled: false  # Disabled by default for security
+    parameters:
+      - name: command
+        type: string
+        required: true
+        description: "Command to execute"
+      - name: working_directory
+        type: string
+        required: false
+        description: "Working directory for command execution"
+    allowlist:
+      # Only safe, read-only commands allowed
+      - "ls"
+      - "ls -la"
+      - "pwd"
+      - "echo"
+      - "cat"
+      - "grep"
+      - "find"
+      - "date"
+      - "whoami"
