@@ -37,6 +37,11 @@ help:
 	@echo "  $(COLOR_INFO)Dependencies:$(COLOR_RESET)"
 	@echo "  $(COLOR_SUCCESS)make install-deps$(COLOR_RESET)   - Install all dependencies"
 	@echo ""
+	@echo "  $(COLOR_INFO)Services (Phase 2):$(COLOR_RESET)"
+	@echo "  $(COLOR_SUCCESS)make run-memory$(COLOR_RESET)     - Run Memory Service"
+	@echo "  $(COLOR_SUCCESS)make test-memory$(COLOR_RESET)    - Test Memory Service"
+	@echo "  $(COLOR_SUCCESS)make memory-shell$(COLOR_RESET)   - Memory Service Python shell"
+	@echo ""
 
 # ============================================================================
 # SETUP
@@ -274,3 +279,39 @@ lint:
 	else \
 		echo "$(COLOR_WARNING)ruff not installed. Install with: pip install ruff$(COLOR_RESET)"; \
 	fi
+
+# ============================================================================
+# MEMORY SERVICE (Phase 2)
+# ============================================================================
+
+run-memory: docker-up
+	@echo "$(COLOR_INFO)Starting Memory Service...$(COLOR_RESET)"
+	@cd services/memory-service && \
+	if [ ! -d "venv" ]; then \
+		echo "$(COLOR_INFO)Creating virtual environment...$(COLOR_RESET)"; \
+		python -m venv venv; \
+	fi; \
+	. venv/bin/activate && \
+	pip install -q -r requirements.txt && \
+	python src/main.py
+
+test-memory:
+	@echo "$(COLOR_INFO)Testing Memory Service...$(COLOR_RESET)"
+	@cd services/memory-service && \
+	if [ ! -d "venv" ]; then \
+		echo "$(COLOR_INFO)Creating virtual environment...$(COLOR_RESET)"; \
+		python -m venv venv; \
+	fi; \
+	. venv/bin/activate && \
+	pip install -q -r requirements.txt && \
+	pytest tests/ -v --tb=short
+
+memory-shell:
+	@echo "$(COLOR_INFO)Opening Memory Service Python shell...$(COLOR_RESET)"
+	@cd services/memory-service && \
+	if [ ! -d "venv" ]; then \
+		echo "$(COLOR_ERROR)Virtual environment not found. Run 'make run-memory' first.$(COLOR_RESET)"; \
+		exit 1; \
+	fi; \
+	. venv/bin/activate && \
+	python -i -c "import sys; sys.path.insert(0, 'src'); from stores.short_term import ShortTermStore; from stores.long_term import LongTermStore; from stores.odic import EpisodicStore; from stores.semantic import SemanticStore; print('Memory stores imported: ShortTermStore, LongTermStore, EpisodicStore, SemanticStore')"
