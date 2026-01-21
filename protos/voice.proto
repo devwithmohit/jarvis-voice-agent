@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package voice;
+
+// STT Service - Speech-to-Text
+service STTService {
+  // Stream audio chunks and get real-time transcription
+  rpc StreamTranscribe(stream AudioChunk) returns (stream TranscriptChunk);
+
+  // Batch transcription (single audio file)
+  rpc TranscribeBatch(AudioRequest) returns (TranscriptResult);
+}
+
+// TTS Service - Text-to-Speech
+service TTSService {
+  // Synthesize text to speech (batch)
+  rpc Synthesize(SynthesisRequest) returns (AudioResponse);
+
+  // Stream audio chunks for long text
+  rpc SynthesizeStream(SynthesisRequest) returns (stream AudioChunk);
+}
+
+// Audio chunk for streaming
+message AudioChunk {
+  bytes data = 1;
+  int32 sample_rate = 2;
+  string format = 3;  // "pcm_s16le", "wav", etc.
+}
+
+// Audio request for batch processing
+message AudioRequest {
+  bytes data = 1;
+  string language = 2;  // "en", "es", etc.
+  bool enable_vad = 3;  // Voice Activity Detection
+}
+
+// Transcription chunk (partial or final)
+message TranscriptChunk {
+  string text = 1;
+  bool is_final = 2;
+  float confidence = 3;
+  string language = 4;
+  int64 timestamp_ms = 5;
+}
+
+// Complete transcription result
+message TranscriptResult {
+  string text = 1;
+  float confidence = 2;
+  string language = 3;
+  repeated TranscriptSegment segments = 4;
+}
+
+// Segment of transcription with timing
+message TranscriptSegment {
+  string text = 1;
+  float start_time = 2;
+  float end_time = 3;
+  float confidence = 4;
+}
+
+// TTS synthesis request
+message SynthesisRequest {
+  string text = 1;
+  string voice_id = 2;     // Voice profile ID
+  float speed = 3;         // Speed multiplier (0.5 - 2.0)
+  float pitch = 4;         // Pitch adjustment
+  string language = 5;     // Language code
+}
+
+// Audio response from TTS
+message AudioResponse {
+  bytes audio_data = 1;
+  int32 sample_rate = 2;
+  string format = 3;
+  int32 duration_ms = 4;
+}

@@ -93,40 +93,93 @@ services:
   #     - voice-agent-net
 
   # STT Service - Speech-to-Text (Python + Whisper)
-  # Uncomment when service is implemented
-  # stt-service:
-  #   build:
-  #     context: ../services/stt-service
-  #     dockerfile: ../../infra/docker/stt-service.Dockerfile
-  #   container_name: voice-agent-stt
-  #   volumes:
-  #     - ./models:/models  # Mount for Whisper model cache
-  #   networks:
-  #     - voice-agent-net
+  stt-service:
+    build:
+      context: ../services/stt-service
+      dockerfile: Dockerfile
+    container_name: voice-agent-stt
+    ports:
+      - "50052:50052"
+    volumes:
+      - stt_models:/app/models # Mount for Whisper model cache
+    environment:
+      - WHISPER_MODEL=base.en
+      - DEVICE=cpu
+      - COMPUTE_TYPE=int8
+      - GRPC_PORT=50052
+      - GRPC_HOST=0.0.0.0
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import grpc; channel = grpc.insecure_channel('localhost:50052'); channel.close()",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - voice-agent-net
 
   # TTS Service - Text-to-Speech (Python + Coqui TTS)
-  # Uncomment when service is implemented
-  # tts-service:
-  #   build:
-  #     context: ../services/tts-service
-  #     dockerfile: ../../infra/docker/tts-service.Dockerfile
-  #   container_name: voice-agent-tts
-  #   volumes:
-  #     - ./models:/models  # Mount for TTS model cache
-  #   networks:
-  #     - voice-agent-net
+  tts-service:
+    build:
+      context: ../services/tts-service
+      dockerfile: Dockerfile
+    container_name: voice-agent-tts
+    ports:
+      - "50053:50053"
+    volumes:
+      - tts_models:/app/models # Mount for TTS model cache
+    depends_on:
+      - redis
+    environment:
+      - TTS_ENGINE=coqui
+      - COQUI_MODEL=tts_models/en/ljspeech/tacotron2-DDC
+      - USE_GPU=false
+      - ENABLE_CACHE=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=2
+      - GRPC_PORT=50053
+      - GRPC_HOST=0.0.0.0
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import grpc; channel = grpc.insecure_channel('localhost:50053'); channel.close()",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - voice-agent-net
 
   # Voice Gateway - Audio streaming & wake-word (Rust)
-  # Uncomment when service is implemented
-  # voice-gateway:
-  #   build:
-  #     context: ../services/voice-gateway
-  #     dockerfile: ../../infra/docker/voice-gateway.Dockerfile
-  #   container_name: voice-agent-voice-gateway
-  #   ports:
-  #     - "9000:9000"  # WebSocket for audio streaming
-  #   networks:
-  #     - voice-agent-net
+  voice-gateway:
+    build:
+      context: ../services/voice-gateway
+      dockerfile: Dockerfile
+    container_name: voice-agent-voice-gateway
+    ports:
+      - "50054:50054"
+    volumes:
+      - ./keywords:/app/keywords # Wake-word model files
+    devices:
+      - /dev/snd:/dev/snd # Audio device access (Linux)
+    environment:
+      - KEYWORD_PATH=/app/keywords/jarvis.ppn
+      - SENSITIVITY=0.5
+    depends_on:
+      - stt-service
+      - tts-service
+    networks:
+      - voice-agent-net
 
   # Tool Executor - Sandboxed tool execution (Rust)
   # Uncomment when service is implemented
@@ -160,6 +213,10 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  stt_models:
+    driver: local
+  tts_models:
     driver: local
 
 networks:

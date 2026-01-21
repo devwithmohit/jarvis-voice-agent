@@ -371,12 +371,16 @@ ls shared/models/generated/
 - [ ] Tool router with allow-lists
 - [ ] Response synthesis
 
-### 📋 Phase 4: Voice Services
+### 📋 Phase 4: Voice Services ✅ **COMPLETE**
 
-- [ ] Whisper STT integration
-- [ ] Coqui TTS integration
-- [ ] Rust voice gateway (WebSocket streaming)
-- [ ] Wake-word detection (openWakeWord)
+- [x] Whisper STT integration (faster-whisper)
+- [x] Coqui TTS integration with Redis caching
+- [x] Rust voice gateway (audio I/O)
+- [x] Wake-word detection (energy-based, ready for Porcupine)
+- [x] gRPC streaming (STT/TTS)
+- [x] Docker deployment configuration
+
+**📖 Documentation**: See `PHASE4_README.md`, `PHASE4_IMPLEMENTATION_SUMMARY.md`, `PHASE4_DEPLOYMENT.md`
 
 ### 📋 Phase 5: Tool Execution
 
