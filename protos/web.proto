@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package web;
+
+// Web Service
+service WebService {
+  // Browser operations
+  rpc Navigate(NavigateRequest) returns (NavigateResponse);
+  rpc ClickElement(ClickRequest) returns (ActionResponse);
+  rpc TypeText(TypeTextRequest) returns (ActionResponse);
+  rpc GetText(GetTextRequest) returns (TextResponse);
+  rpc GetPageContent(EmptyRequest) returns (ContentResponse);
+  rpc Screenshot(ScreenshotRequest) returns (ScreenshotResponse);
+  rpc WaitForSelector(WaitRequest) returns (ActionResponse);
+
+  // Search operations
+  rpc Search(SearchRequest) returns (SearchResponse);
+
+  // Scraping operations
+  rpc ExtractText(ExtractRequest) returns (ExtractResponse);
+  rpc ExtractLinks(ExtractLinksRequest) returns (LinksResponse);
+  rpc ExtractMetadata(EmptyRequest) returns (MetadataResponse);
+}
+
+// Empty request
+message EmptyRequest {}
+
+// Navigate
+message NavigateRequest {
+  string url = 1;
+}
+
+message NavigateResponse {
+  bool success = 1;
+  string final_url = 2;
+  string title = 3;
+  int32 status_code = 4;
+  string error = 5;
+}
+
+// Click
+message ClickRequest {
+  string selector = 1;
+}
+
+message ActionResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+// Type Text
+message TypeTextRequest {
+  string selector = 1;
+  string text = 2;
+}
+
+// Get Text
+message GetTextRequest {
+  string selector = 1;
+}
+
+message TextResponse {
+  bool success = 1;
+  string text = 2;
+  string error = 3;
+}
+
+// Get Page Content
+message ContentResponse {
+  bool success = 1;
+  string html = 2;
+  string error = 3;
+}
+
+// Screenshot
+message ScreenshotRequest {
+  string path = 1;
+}
+
+message ScreenshotResponse {
+  bool success = 1;
+  bytes image_data = 2;
+  string error = 3;
+}
+
+// Wait
+message WaitRequest {
+  string selector = 1;
+  int32 timeout_ms = 2;
+}
+
+// Search
+message SearchRequest {
+  string query = 1;
+  string engine = 2;  // "google" or "bing"
+  int32 max_results = 3;
+}
+
+message SearchResult {
+  string title = 1;
+  string url = 2;
+  string snippet = 3;
+}
+
+message SearchResponse {
+  repeated SearchResult results = 1;
+  int32 total_count = 2;
+}
+
+// Extract Text
+message ExtractRequest {
+  string selector = 1;  // Optional CSS selector
+}
+
+message ExtractResponse {
+  bool success = 1;
+  string text = 2;
+  string error = 3;
+}
+
+// Extract Links
+message ExtractLinksRequest {
+  string base_url = 1;  // Optional base URL for relative links
+}
+
+message Link {
+  string text = 1;
+  string href = 2;
+}
+
+message LinksResponse {
+  bool success = 1;
+  repeated Link links = 2;
+  string error = 3;
+}
+
+// Extract Metadata
+message MetadataResponse {
+  bool success = 1;
+  map<string, string> metadata = 2;
+  string error = 3;
+}

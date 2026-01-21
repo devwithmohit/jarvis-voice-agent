@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package tool;
+
+// Tool Executor Service
+service ToolExecutor {
+  // File operations
+  rpc ReadFile(FileReadRequest) returns (FileReadResponse);
+  rpc WriteFile(FileWriteRequest) returns (FileWriteResponse);
+  rpc ListDirectory(FileListRequest) returns (FileListResponse);
+  rpc FileExists(FileExistsRequest) returns (FileExistsResponse);
+  rpc GetFileInfo(FileInfoRequest) returns (FileInfoResponse);
+
+  // System operations
+  rpc ExecuteCommand(CommandRequest) returns (CommandResponse);
+  rpc GetWorkingDirectory(EmptyRequest) returns (DirectoryResponse);
+  rpc GetEnvironmentVariable(EnvVarRequest) returns (EnvVarResponse);
+}
+
+// Empty request message
+message EmptyRequest {}
+
+// File Read
+message FileReadRequest {
+  string path = 1;
+}
+
+message FileReadResponse {
+  bool success = 1;
+  string content = 2;
+  string error = 3;
+}
+
+// File Write
+message FileWriteRequest {
+  string path = 1;
+  string content = 2;
+}
+
+message FileWriteResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+// File List
+message FileListRequest {
+  string path = 1;
+}
+
+message FileEntry {
+  string name = 1;
+  bool is_dir = 2;
+  uint64 size = 3;
+}
+
+message FileListResponse {
+  bool success = 1;
+  repeated FileEntry entries = 2;
+  string error = 3;
+}
+
+// File Exists
+message FileExistsRequest {
+  string path = 1;
+}
+
+message FileExistsResponse {
+  bool success = 1;
+  bool exists = 2;
+  string error = 3;
+}
+
+// File Info
+message FileInfoRequest {
+  string path = 1;
+}
+
+message FileInfoResponse {
+  bool success = 1;
+  uint64 size = 2;
+  bool is_dir = 3;
+  bool is_file = 4;
+  bool readonly = 5;
+  string error = 6;
+}
+
+// Command Execution
+message CommandRequest {
+  string command = 1;
+  repeated string args = 2;
+}
+
+message CommandResponse {
+  bool success = 1;
+  string stdout = 2;
+  string stderr = 3;
+  int32 exit_code = 4;
+  string error = 5;
+}
+
+// Directory
+message DirectoryResponse {
+  bool success = 1;
+  string path = 2;
+  string error = 3;
+}
+
+// Environment Variable
+message EnvVarRequest {
+  string name = 1;
+}
+
+message EnvVarResponse {
+  bool success = 1;
+  string value = 2;
+  string error = 3;
+}

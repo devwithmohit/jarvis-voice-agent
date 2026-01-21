@@ -1,0 +1,57 @@
+file_operations:
+  allowed_extensions:
+    read: [".txt", ".json", ".yaml", ".yml", ".md", ".csv", ".log"]
+    write: [".txt", ".json", ".yaml", ".yml", ".md", ".csv", ".log"]
+
+  blocked_paths:
+    - "/etc/*"
+    - "/sys/*"
+    - "/proc/*"
+    - "/dev/*"
+    - "/root/*"
+    - "/boot/*"
+    - "C:\\Windows\\*"
+    - "C:\\Program Files\\*"
+    - "C:\\Program Files (x86)\\*"
+
+  allowed_directories:
+    - "/home/*/Documents/*"
+    - "/home/*/Downloads/*"
+    - "/tmp/voice-agent/*"
+    - "~/Documents/*"
+    - "~/Downloads/*"
+    - "C:\\Users\\*\\Documents\\*"
+    - "C:\\Users\\*\\Downloads\\*"
+
+  max_file_size_mb: 10
+
+system_commands:
+  enabled: true
+
+  allowlist:
+    - "ls"
+    - "pwd"
+    - "echo"
+    - "date"
+    - "whoami"
+    - "dir"      # Windows
+    - "cd"
+
+  blocked_patterns:
+    - "rm -rf"
+    - "sudo"
+    - "chmod"
+    - "chown"
+    - "wget"
+    - "curl"
+    - "> /dev/"
+    - "mkfs"
+    - "dd if="
+    - "format"
+
+  timeout_seconds: 10
+
+environment:
+  sandbox_user: "voice-agent"
+  max_execution_time_ms: 5000
+  max_output_bytes: 1048576  # 1MB

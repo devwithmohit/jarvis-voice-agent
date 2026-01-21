@@ -182,32 +182,62 @@ services:
       - voice-agent-net
 
   # Tool Executor - Sandboxed tool execution (Rust)
-  # Uncomment when service is implemented
-  # tool-executor:
-  #   build:
-  #     context: ../services/tool-executor
-  #     dockerfile: ../../infra/docker/tool-executor.Dockerfile
-  #   container_name: voice-agent-tool-executor
-  #   security_opt:
-  #     - no-new-privileges:true
-  #   cap_drop:
-  #     - ALL
-  #   cap_add:
-  #     - NET_BIND_SERVICE
-  #   networks:
-  #     - voice-agent-net
+  tool-executor:
+    build:
+      context: ../services/tool-executor
+      dockerfile: Dockerfile
+    container_name: voice-agent-tool-executor
+    ports:
+      - "50055:50055"
+    volumes:
+      - tool_workspace:/tmp/voice-agent # Workspace for file operations
+    environment:
+      - RUST_LOG=info
+      - GRPC_PORT=50055
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test -S /proc/self/fd/0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - voice-agent-net
 
   # Web Service - Browser automation (Python + Playwright)
-  # Uncomment when service is implemented
-  # web-service:
-  #   build:
-  #     context: ../services/web-service
-  #     dockerfile: ../../infra/docker/web-service.Dockerfile
-  #   container_name: voice-agent-web
-  #   environment:
-  #     - SERPAPI_KEY=${SERPAPI_KEY}
-  #   networks:
-  #     - voice-agent-net
+  web-service:
+    build:
+      context: ../services/web-service
+      dockerfile: Dockerfile
+    container_name: voice-agent-web
+    ports:
+      - "50056:50056"
+    environment:
+      - GRPC_PORT=50056
+      - GRPC_HOST=0.0.0.0
+      - HEADLESS=true
+      - BROWSER_TIMEOUT_MS=30000
+      - SERPAPI_KEY=${SERPAPI_KEY:-}
+    depends_on:
+      - tool-executor
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import grpc; channel = grpc.insecure_channel('localhost:50056'); channel.close()",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - voice-agent-net
 
 volumes:
   postgres_data:
@@ -217,6 +247,8 @@ volumes:
   stt_models:
     driver: local
   tts_models:
+    driver: local
+  tool_workspace:
     driver: local
 
 networks:
