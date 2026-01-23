@@ -1,7 +1,9 @@
 grpcio==1.60.0
 grpcio-tools==1.60.0
-TTS==0.22.0
-numpy==1.26.3
-torch==2.1.2
+elevenlabs==1.0.0
+numpy==1.26.4
+requests==2.31.0
+redis==5.0.1
+torch==2.2.0
 soundfile==0.12.1
 pydub==0.25.1

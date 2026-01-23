@@ -8,7 +8,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.engines.coqui_engine import CoquiEngine
+from src.engines.elevenlabs_engine import ElevenLabsEngine
 from src.cache.audio_cache import AudioCache
 from config import settings
 
@@ -27,7 +27,7 @@ class TTSServicer:
 
     def __init__(self):
         logger.info("Initializing TTS servicer...")
-        self.engine = CoquiEngine()
+        self.engine = ElevenLabsEngine()
         self.cache = AudioCache()
         logger.info("TTS servicer initialized successfully")
 
@@ -175,8 +175,7 @@ def serve():
     server.start()
 
     logger.info(f"TTS gRPC server started on {settings.grpc_host}:{settings.grpc_port}")
-    logger.info(f"Using TTS engine: {settings.tts_engine}")
-    logger.info(f"Coqui model: {settings.coqui_model}")
+    logger.info(f"Using TTS engine: ElevenLabs")
     logger.info(f"Cache enabled: {settings.enable_cache}")
 
     try:

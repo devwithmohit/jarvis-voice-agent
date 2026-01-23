@@ -1,4 +1,6 @@
+# ========================================
 # Python
+# ========================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -31,100 +33,307 @@ htmlcov/
 dmypy.json
 .pyre/
 .pytype/
+
+# Python virtual environments
 venv/
 env/
 ENV/
 env.bak/
 venv.bak/
+.venv/
+.virtualenv/
 
+# uv package manager
+.uv/
+uv.lock
+
+# ========================================
 # Rust
+# ========================================
 target/
 Cargo.lock
 **/*.rs.bk
 *.pdb
+*.rlib
+*.rmeta
 
-# Environment
+# Rust generated proto files
+**/generated/
+services/*/src/generated/
+
+# ========================================
+# Node.js / React / Bun
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+bun.lockb
+.pnp
+.pnp.js
+
+# React build output
+dashboard/build/
+dashboard/dist/
+dashboard/.next/
+dashboard/out/
+
+# Testing
+dashboard/coverage/
+
+# Production
+dashboard/.cache/
+dashboard/*.tsbuildinfo
+
+# ========================================
+# Environment & Config
+# ========================================
 .env
 .env.local
 .env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
 
-# IDEs
+# Keep example files
+!.env.example
+!**/.env.example
+
+# ========================================
+# IDEs & Editors
+# ========================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.iml
 
+# ========================================
 # Logs
+# ========================================
 *.log
 logs/
 *.log.*
+npm-debug.log*
+yarn-debug.log*
+lerna-debug.log*
 
+# ========================================
 # Database
+# ========================================
 *.db
 *.sqlite
 *.sqlite3
 pgdata/
+postgres_data/
+redis_data/
+*.sql.gz
 
+# ========================================
 # Docker
+# ========================================
 docker-compose.override.yml
+.dockerignore
 
-# AI Models (large files)
+# ========================================
+# AI Models (Large Files)
+# ========================================
 models/
 *.pt
 *.pth
 *.onnx
 *.bin
 *.safetensors
+*.h5
+*.pb
+*.tflite
+*.mlmodel
 
-# Generated gRPC code (tracked but can be regenerated)
-# Uncomment if you want to ignore generated files
-# shared/models/generated/*_pb2.py
-# shared/models/generated/*_pb2_grpc.py
-# shared/models/generated/*.pyi
+# Whisper models
+services/stt-service/models/
+services/tts-service/models/
 
-# Audio files
+# ========================================
+# Generated gRPC/Protobuf Code
+# ========================================
+# Python generated proto
+*_pb2.py
+*_pb2_grpc.py
+*_pb2.pyi
+
+# Rust generated proto (already in target/)
+# TypeScript generated proto
+**/*_pb.ts
+**/*_pb.js
+
+# Keep proto definitions
+!**/*.proto
+
+# ========================================
+# Audio Files
+# ========================================
 *.wav
 *.mp3
 *.flac
 *.ogg
+*.opus
+*.webm
+*.m4a
 audio_samples/
 recordings/
+test_audio/
 
-# Vector indices
+# ========================================
+# Vector Databases & Embeddings
+# ========================================
 *.faiss
 *.index
 vector_store/
+embeddings/
+chroma_db/
 
-# Temp files
+# ========================================
+# Cache & Temp Files
+# ========================================
 tmp/
 temp/
 *.tmp
 .cache/
+.parcel-cache/
+.eslintcache
+.turbo/
 
-# OS
-Thumbs.db
+# Redis dump
+dump.rdb
+
+# Playwright
+playwright-report/
+test-results/
+
+# ========================================
+# OS Specific
+# ========================================
+# macOS
 .DS_Store
-desktop.ini
+.AppleDouble
+.LSOverride
+._*
 
-# Test coverage
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ========================================
+# Test Coverage
+# ========================================
 .coverage
 coverage.xml
 *.cover
 .hypothesis/
+.pytest_cache/
+htmlcov/
 
+# ========================================
 # Jupyter Notebooks
+# ========================================
 .ipynb_checkpoints/
 *.ipynb
 
-# Secrets (never commit)
+# ========================================
+# Secrets & Credentials (NEVER COMMIT)
+# ========================================
 secrets/
 *.key
 *.pem
 *.crt
+*.p12
+*.pfx
 credentials.json
+service-account.json
+gcloud-key.json
 
-# Build artifacts
+# API Keys
+*apikey*
+*api_key*
+*secret*
+*token*
+
+# ========================================
+# Build Artifacts
+# ========================================
 *.whl
 *.tar.gz
+*.zip
+*.exe
+*.dll
+*.dylib
+
+# ========================================
+# Service-Specific
+# ========================================
+# Memory Service
+services/memory-service/vector_data/
+services/memory-service/faiss_index/
+
+# TTS Service
+services/tts-service/cache/
+services/tts-service/audio_cache/
+
+# STT Service
+services/stt-service/cache/
+services/stt-service/temp_audio/
+
+# Tool Executor
+services/tool-executor/sandboxed_output/
+
+# Web Service
+services/web-service/screenshots/
+services/web-service/downloads/
+
+# ========================================
+# Documentation Build
+# ========================================
+docs/_build/
+docs/.doctrees/
+site/
+
+# ========================================
+# Monitoring & Metrics
+# ========================================
+prometheus_data/
+grafana_data/
+*.prof
+*.trace
+
+# ========================================
+# Lock Files (Optional - Team Decision)
+# ========================================
+# Keep Python lock files for reproducibility
+# poetry.lock
+# Pipfile.lock
+
+# Rust Cargo.lock already ignored above
+# For libraries, commit Cargo.lock
+# For binaries, optionally commit

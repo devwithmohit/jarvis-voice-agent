@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # TTS Engine
-    tts_engine: str = "coqui"  # "coqui" or "elevenlabs"
+    tts_engine: str = "elevenlabs"
 
     # Coqui settings
     coqui_model: str = "tts_models/en/ljspeech/tacotron2-DDC"
@@ -11,7 +11,9 @@ class Settings(BaseSettings):
 
     # ElevenLabs (optional)
     elevenlabs_api_key: str = ""
-    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Default voice
+    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"
+    elevenlabs_model: str = "eleven_multilingual_v2"
+    # Default voice
 
     # Audio settings
     sample_rate: int = 22050
